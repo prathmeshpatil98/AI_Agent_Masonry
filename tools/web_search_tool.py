@@ -1,4 +1,4 @@
-# web_search_tool.py
+
 import requests
 from bs4 import BeautifulSoup
 

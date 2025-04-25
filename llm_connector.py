@@ -12,7 +12,7 @@ if not GOOGLE_API_KEY:
 # Set up configuration
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# Use the correct model name (e.g., gemini-pro or gemini-1.5-pro)
+# Use the model 
 model = genai.GenerativeModel("gemini-1.5-pro")
 
 
