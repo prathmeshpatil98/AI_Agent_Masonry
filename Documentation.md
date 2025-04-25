@@ -133,7 +133,10 @@ Here’s a simplified flow of how the agent handles a user’s request:
 
 ---
 
-Great questions — let’s break it down tool by tool and explain **what data flows in and out**, and **how the agent uses it** in the decision-making process:
+
+
+
+
 
 ---
 
