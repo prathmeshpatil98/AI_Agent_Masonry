@@ -132,3 +132,133 @@ Here’s a simplified flow of how the agent handles a user’s request:
 - **For Errors**: The agent tries to handle issues like slow websites or missing data gracefully by either skipping problematic sources or notifying the user.
 
 ---
+
+Great questions — let’s break it down tool by tool and explain **what data flows in and out**, and **how the agent uses it** in the decision-making process:
+
+---
+
+## 🧰 TOOLS Integration OVERVIEW
+
+### 1. `web_search_tool.py`
+**Purpose:** Search the web for relevant links and snippets.
+
+- **Input:**  
+  `query` → the user’s research topic (e.g., "climate change impact in 2024")
+  
+- **Output:**  
+  A list of dictionaries like:  
+  ```python
+  [
+    {
+      "title": "Global Warming Trends",
+      "link": "https://example.com/article",
+      "snippet": "A recent study shows..."
+    },
+    ...
+  ]
+  ```
+
+- **How the agent uses it:**  
+  Provides the **first batch of URLs** and preview texts. These links become the **primary content sources** to be scraped, analyzed, and possibly used in the final report.
+
+---
+
+### 2. `web_scraper_tool.py`
+**Purpose:** Extract the full text content from a web page.
+
+- **Input:**  
+  A URL from search results
+
+- **Output:**  
+  Raw body text of the webpage (up to ~3000 characters)
+
+- **How the agent uses it:**  
+  Provides **full textual content** from links. This is passed to the analyzer to check for relevance and extract summaries.
+
+---
+
+### 3. `content_analyzer_tool.py`
+**Purpose:** Determine if a scraped page is relevant to the query and summarize it.
+
+- **Input:**  
+  - `raw_text`: full web page text from scraper  
+  - `keywords`: list of keywords extracted from user query
+
+- **Output:**  
+  ```python
+  {
+    "relevance_score": 4,
+    "relevant": True,
+    "summary": "This article discusses..."
+  }
+  ```
+
+- **How the agent uses it:**  
+  It **filters out irrelevant pages** and **summarizes only relevant sources** for inclusion in the report.
+
+---
+
+### 4. `news_aggregator_tool.py`
+**Purpose:** Fetch recent news articles related to the topic.
+
+- **Input:**  
+  - `query`: same user research query  
+  - `page_size`: how many articles to fetch (default is 5)
+
+- **Output:**  
+  A list of news article dictionaries:  
+  ```python
+  [
+    {
+      "headline": "Climate report 2024",
+      "summary": "The new UN climate report...",
+      "url": "https://news.com/article",
+      "source": "Reuters"
+    },
+    ...
+  ]
+  ```
+
+- **How the agent uses it:**  
+  Used to **add current and credible context** to the report. It enhances trust and timeliness.
+
+---
+
+### 5. `llm_connector.py` (`query_gemini`)
+**Purpose:** Generate a human-like summary from the collected data.
+
+- **Input:**  
+  A structured prompt including:
+  - The user query
+  - News summaries
+  - Relevant analyzed content
+
+- **Output:**  
+  A full-length research report written by Gemini (text)
+
+- **How the agent uses it:**  
+  Final step — Gemini compiles everything into a **well-structured, cited, human-readable report** for the end user.
+
+---
+
+## 🧠 How the Agent Uses These Tools Together
+
+The flow looks like this:
+
+```
+User Query
+   ↓
+[web_search_tool] → get links
+   ↓
+[web_scraper_tool] → get full text
+   ↓
+[content_analyzer_tool] → check for relevance, extract summaries
+   ↓
+[news_aggregator_tool] → get current articles
+   ↓
+Compile all sections → formatted prompt
+   ↓
+[llm_connector] → send to Gemini → get final report
+   ↓
+Display to user via Streamlit
+```
