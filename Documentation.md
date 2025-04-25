@@ -1,5 +1,115 @@
 
 
+## 🧱 **1. How Your Agent Is Structured**
+
+The agent follows a **modular architecture** with clean separation of concerns:
+
+### 🗂 Main Components:
+- **Frontend/UI**: `app.py` (Streamlit interface)
+- **Controller**: `research_agent.py` (core logic & orchestration)
+- **Tools (Modular)**:  
+  - `web_search_tool.py` — Web search  
+  - `web_scraper_tool.py` — Page scraping  
+  - `content_analyzer_tool.py` — Relevance/summarization  
+  - `news_aggregator_tool.py` — News API  
+  - `llm_connector.py` — Gemini LLM query interface  
+
+Each tool is a standalone Python module, imported into the agent and triggered in a logical sequence.
+
+---
+
+## 🧾 **2. How You Designed the Prompts/Instructions for the AI**
+
+The prompt to Gemini is built **dynamically** in `research_agent.py` by injecting structured content into a pre-written instruction format:
+
+### 🧠 Prompt Strategy:
+- Clear system role:  
+  `"You are Masonry’s autonomous Web Research AI Agent."`
+  
+- Includes structured sections:
+  - `### 📰 Recent News Articles`
+  - `### 🌐 Additional Web Sources`
+  - Final instruction block:
+    ```
+    Your goal is to automatically search the web, extract relevant and Perfect information and compile a comprehensive research report...
+    - Include a concise summary
+    - Highlight key findings
+    - Provide relevant data, timelines or statistics
+    - Cite sources inline
+    ```
+
+### 🧩 Design Highlights:
+- Human-like format for easy Gemini parsing
+- Inline source guidance (e.g., [1], [2])
+- Dynamically adapts based on tool results (if no news is found, it notes the fallback)
+
+This ensures **Gemini understands both structure and intent**, and generates rich, coherent responses.
+
+---
+
+## 🔗 **3. How Your Agent Connects to and Uses External Tools**
+
+Each tool is used in a **defined pipeline** and returns data back to the `research_agent` function.
+
+### 🔌 Tools Integration Flow:
+1. **Search**:  
+   `web_search()` → gets top links  
+2. **Scrape**:  
+   `scrape_content(link)` → gets full text  
+3. **Analyze**:  
+   `analyze_content(text, query_keywords)` → score & summary  
+4. **News Fetching**:  
+   `fetch_news(query)` → recent news articles  
+5. **Prompt Assembly** →  
+   Gemini prompt compiled and passed to `query_gemini(prompt)`
+
+Each function returns well-structured Python data (lists/dicts), making it easy to build final context.
+
+---
+
+## 🚨 **4. How Your Agent Handles Errors and Unexpected Situations**
+
+### ✅ Error Handling Techniques:
+- **Environment Validation**:  
+  `.env` keys are validated at runtime  
+  ```python
+  if not GOOGLE_API_KEY:
+      raise ValueError("❌ GOOGLE_API_KEY not found")
+  ```
+
+- **Tool Fallbacks**:
+  - News fetch wrapped in `try-except`
+    ```python
+    try:
+        news_items = fetch_news(query)
+    except Exception as e:
+        news_items = []
+    ```
+    → Agent continues even if News API fails
+
+- **Scraping Errors**:  
+  Return readable error string instead of crashing:
+  ```python
+  return f"Error scraping {url}: {str(e)}"
+  ```
+
+- **LLM Errors**:  
+  Catch and return Gemini errors gracefully:
+  ```python
+  except Exception as e:
+      return f"❌ Error while querying Gemini: {e}"
+  ```
+
+- **UI Feedback via Streamlit**:
+  - Loading spinners
+  - Success/failure banners (`st.error`, `st.success`, `st.spinner`)
+
+
+
+
+
+
+
 ### **Web Research Agent - Detailed Plan**
 
 #### 1. **Agent's Core Objective**
